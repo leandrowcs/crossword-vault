@@ -14,7 +14,7 @@ Jogo de palavras cruzadas em português (pt-BR), 100% local: sem backend, sem Fi
 ## Arquitetura
 
 - `src/engine` — TypeScript puro e determinístico (sem React/DOM): normalização, PRNG, numeração, gerador e validador.
-- `src/data` — corpus curado (`CORPUS`, `CORPUS_VERSION`).
+- `src/data` — corpus curado com mais de 970 respostas únicas (`CORPUS`, `CORPUS_VERSION`).
 - `src/game` — estado de jogo imutável, navegação, persistência e histórico local.
 - `src/components`, `App.tsx`, `useCrosswordGame.ts` — UI React. O engine não depende da UI.
 
@@ -40,7 +40,7 @@ Respostas: NFD, remoção de marcas combinantes (ç → C), maiúsculas, apenas 
 
 ## Como adicionar palavras
 
-Adicione `['palavra', 'dica original curta']` em `src/data/corpus.ts` e rode `npm test` (valida unicidade, formato e dicas). Altere `CORPUS_VERSION` ao modificar ou remover palavras existentes, pois jogos salvos dependem do corpus.
+Adicione `['palavra', 'dica original curta']` em `src/data/corpusExtra.ts` e rode `npm test` (valida tamanho mínimo, unicidade, formato e dicas). Altere `CORPUS_VERSION` ao modificar ou remover palavras existentes, pois jogos salvos dependem do corpus.
 
 ## Limites
 

@@ -4,7 +4,7 @@ import { CORPUS, CORPUS_VERSION } from './corpus'
 
 describe('corpus', () => {
   it('tem tamanho mínimo', () => {
-    expect(CORPUS.length).toBeGreaterThanOrEqual(400)
+    expect(CORPUS.length).toBeGreaterThanOrEqual(950)
     expect(CORPUS_VERSION).toBeGreaterThanOrEqual(1)
   })
 

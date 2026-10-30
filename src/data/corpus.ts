@@ -2,7 +2,7 @@ import type { CorpusEntry } from '../engine/types'
 import { isValidAnswer, normalizeAnswer } from '../engine/normalize'
 import { EXTRA } from './corpusExtra'
 
-export const CORPUS_VERSION = 2
+export const CORPUS_VERSION = 3
 
 const RAW: readonly (readonly [string, string])[] = [
   ['árvore', 'Planta de tronco alto que dá sombra'],
