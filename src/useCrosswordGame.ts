@@ -6,22 +6,30 @@ import {
   checkAll,
   clearCell,
   clearSave,
+  completeGame,
   createGame,
+  ensureGameStarted,
   entryAt,
   firstEmptyCell,
   moveSelection,
   nextEntry,
   orderedEntries,
   readSave,
+  readHistory,
   resolveDirection,
   restoreGame,
   revealCell,
   revealEntry,
   saveGame,
+  summarizeHistory,
   setLetter,
   stepInEntry,
+  writeHistory,
+  isComplete,
+  usedHelp,
   type ArrowKey,
   type Game,
+  type GameRecord,
   type Selection,
   type StorageLike,
 } from './game'
@@ -31,6 +39,9 @@ export interface Session {
   game: Game
   selection: Selection
   boardSize: 9 | 11 | 13 | 15
+  startedAt: number
+  isStarted: boolean
+  isResumable: boolean
 }
 
 type BoardSize = Session['boardSize']
@@ -63,23 +74,40 @@ const initialSelection = (puzzle: Puzzle, game: Game): Selection => {
 
 const otherDirection = (direction: Direction): Direction => (direction === 'across' ? 'down' : 'across')
 
-const loadSession = (forceNew: boolean, requestedSize?: BoardSize): Session => {
+const loadSession = (forceNew: boolean, requestedSize?: BoardSize, activate = false): Session => {
   const storage = getStorage()
   if (forceNew && storage) clearSave(storage)
   const save = !forceNew && storage ? readSave(storage) : null
   const reusable = save && save.corpusVersion === CORPUS_VERSION ? save : null
   const boardSize = requestedSize ?? reusable?.size ?? 11
   const puzzle = generatePuzzle(reusable ? reusable.seed : randomSeed(), CORPUS, { size: boardSize })
-  const game = (reusable ? restoreGame(puzzle, reusable) : null) ?? createGame(puzzle)
-  return { puzzle, game, selection: initialSelection(puzzle, game), boardSize }
+  const restored = reusable ? restoreGame(puzzle, reusable) : null
+  const game = restored ?? createGame(puzzle)
+  const isResumable = restored !== null
+  const startedAt = isResumable ? reusable?.startedAt ?? reusable?.savedAt ?? Date.now() : Date.now()
+  return {
+    puzzle,
+    game,
+    selection: initialSelection(puzzle, game),
+    boardSize,
+    startedAt,
+    isStarted: activate || isResumable,
+    isResumable: activate || isResumable,
+  }
 }
 
 export function useCrosswordGame() {
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
+  const [history, setHistory] = useState<GameRecord[]>(() => {
+    const storage = getStorage()
+    return storage ? readHistory(storage) : []
+  })
+  const [saveFailed, setSaveFailed] = useState(false)
+  const [historySaveFailed, setHistorySaveFailed] = useState(false)
 
-  const start = useCallback((forceNew: boolean, size?: BoardSize) => {
+  const start = useCallback((forceNew: boolean, size?: BoardSize, activate = false) => {
     try {
-      setStatus({ kind: 'ready', session: loadSession(forceNew, size) })
+      setStatus({ kind: 'ready', session: loadSession(forceNew, size, activate) })
     } catch (error) {
       setStatus({
         kind: 'error',
@@ -96,17 +124,50 @@ export function useCrosswordGame() {
   useEffect(() => {
     if (status.kind !== 'ready') return
     const storage = getStorage()
-    if (storage) {
-      saveGame(
-        storage,
-        status.session.puzzle,
-        status.session.game,
-        CORPUS_VERSION,
-        Date.now(),
-        status.session.boardSize,
-      )
+    if (status.session.isStarted) {
+      if (!storage) {
+        setSaveFailed(true)
+      } else {
+        setSaveFailed(
+          !saveGame(
+            storage,
+            status.session.puzzle,
+            status.session.game,
+            CORPUS_VERSION,
+            Date.now(),
+            status.session.boardSize,
+            status.session.startedAt,
+          ),
+        )
+      }
     }
+    if (!status.session.isStarted) return
+    const { puzzle, boardSize, startedAt, game } = status.session
+    const id = `${boardSize}:${puzzle.seed}:${startedAt}`
+    const record: GameRecord = {
+      id,
+      seed: puzzle.seed,
+      size: boardSize,
+      startedAt,
+      completedAt: null,
+      assisted: false,
+    }
+    setHistory((previous) => {
+      const started = ensureGameStarted(previous, record)
+      return isComplete(game, puzzle)
+        ? completeGame(started, id, Date.now(), usedHelp(game))
+        : started
+    })
   }, [status])
+
+  useEffect(() => {
+    const storage = getStorage()
+    if (!storage) {
+      if (history.length > 0) setHistorySaveFailed(true)
+      return
+    }
+    setHistorySaveFailed(!writeHistory(storage, history))
+  }, [history])
 
   const update = useCallback((fn: (session: Session) => Session) => {
     setStatus((previous) =>
@@ -116,8 +177,12 @@ export function useCrosswordGame() {
 
   const restart = useCallback((size: BoardSize = 11) => {
     setStatus({ kind: 'loading' })
-    window.setTimeout(() => start(true, size), 0)
+    window.setTimeout(() => start(true, size, true), 0)
   }, [start])
+
+  const activate = useCallback(() => {
+    update((session) => (session.isStarted ? session : { ...session, isStarted: true }))
+  }, [update])
 
   const select = useCallback(
     (row: number, col: number) =>
@@ -243,8 +308,15 @@ export function useCrosswordGame() {
 
   return {
     status,
+    history,
+    summary: summarizeHistory(history),
+    persistenceWarning:
+      saveFailed || historySaveFailed
+        ? 'Não foi possível salvar neste navegador. Seu progresso pode ser perdido.'
+        : null,
     retry: restart,
     restart,
+    activate,
     select,
     selectEntry,
     toggleDirection,

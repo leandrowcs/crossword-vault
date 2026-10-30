@@ -3,9 +3,10 @@ interface ToolbarProps {
   onRevealLetter: () => void
   onRevealWord: () => void
   onNewGame: () => void
+  onHome: () => void
 }
 
-export function Toolbar({ onCheck, onRevealLetter, onRevealWord, onNewGame }: ToolbarProps) {
+export function Toolbar({ onCheck, onRevealLetter, onRevealWord, onNewGame, onHome }: ToolbarProps) {
   return (
     <div className="toolbar" role="toolbar" aria-label="Ajudas e ações">
       <button type="button" className="btn" onClick={onCheck}>
@@ -19,6 +20,9 @@ export function Toolbar({ onCheck, onRevealLetter, onRevealWord, onNewGame }: To
       </button>
       <button type="button" className="btn btn-primary" onClick={onNewGame}>
         Novo jogo
+      </button>
+      <button type="button" className="btn" onClick={onHome}>
+        Início
       </button>
     </div>
   )

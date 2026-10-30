@@ -17,6 +17,7 @@ export interface SavedGame {
   input: string[][]
   revealed: boolean[][]
   savedAt: number
+  startedAt?: number
 }
 
 const isBoardSize = (value: unknown): value is SavedGame['size'] =>
@@ -36,6 +37,8 @@ const isSavedGame = (value: unknown): value is SavedGame =>
   Number.isFinite(value.seed) &&
   isBoardSize(value.size) &&
   typeof value.savedAt === 'number' &&
+  (value.startedAt === undefined ||
+    (typeof value.startedAt === 'number' && Number.isFinite(value.startedAt))) &&
   isMatrix(value.input, (cell) => typeof cell === 'string') &&
   isMatrix(value.revealed, (cell) => typeof cell === 'boolean')
 
@@ -46,6 +49,7 @@ export function saveGame(
   corpusVersion: number,
   now: number = Date.now(),
   size: SavedGame['size'] = 15,
+  startedAt: number = now,
 ): boolean {
   const payload: SavedGame = {
     version: 1,
@@ -55,6 +59,7 @@ export function saveGame(
     input: game.input,
     revealed: game.revealed,
     savedAt: now,
+    startedAt,
   }
   try {
     storage.setItem(SAVE_KEY, JSON.stringify(payload))

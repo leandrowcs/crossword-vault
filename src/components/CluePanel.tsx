@@ -40,6 +40,23 @@ export function CluePanel({ across, down, activeId, activeDirection, game, onSel
             aria-selected={tab === direction}
             aria-controls="clue-tabpanel"
             className={`clue-tab${tab === direction ? ' active' : ''}`}
+            tabIndex={tab === direction ? 0 : -1}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                event.preventDefault()
+                const nextDirection = direction === 'across' ? 'down' : 'across'
+                setTab(nextDirection)
+                document.getElementById(`tab-${nextDirection}`)?.focus()
+              }
+              if (event.key === 'Home' || event.key === 'End') {
+                event.preventDefault()
+                const target = event.key === 'Home' ? TABS[0] : TABS[TABS.length - 1]
+                if (target) {
+                  setTab(target.direction)
+                  document.getElementById(`tab-${target.direction}`)?.focus()
+                }
+              }
+            }}
             onClick={() => setTab(direction)}
           >
             {label}
