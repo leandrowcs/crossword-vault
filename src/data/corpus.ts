@@ -1,6 +1,8 @@
 import type { CorpusEntry } from '../engine/types'
+import { isValidAnswer, normalizeAnswer } from '../engine/normalize'
+import { EXTRA } from './corpusExtra'
 
-export const CORPUS_VERSION = 1
+export const CORPUS_VERSION = 2
 
 const RAW: readonly (readonly [string, string])[] = [
   ['árvore', 'Planta de tronco alto que dá sombra'],
@@ -164,4 +166,14 @@ const RAW: readonly (readonly [string, string])[] = [
   ['castelo', 'Fortaleza medieval de nobres'],
 ]
 
-export const CORPUS: CorpusEntry[] = RAW.map(([word, clue]) => ({ word, clue }))
+export const CORPUS: CorpusEntry[] = (() => {
+  const seen = new Set<string>()
+  const entries: CorpusEntry[] = []
+  for (const [word, clue] of [...RAW, ...EXTRA]) {
+    const key = normalizeAnswer(word)
+    if (!isValidAnswer(word) || seen.has(key)) continue
+    seen.add(key)
+    entries.push({ word, clue })
+  }
+  return entries
+})()

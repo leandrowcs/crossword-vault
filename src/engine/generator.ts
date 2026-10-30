@@ -28,9 +28,14 @@ interface Board {
   used: { across: boolean; down: boolean }[][]
 }
 
-const MAX_ATTEMPTS = 60
-const MAX_PASSES = 3
-const MIN_ACCEPTED_WORDS = 8
+const MAX_ATTEMPTS = 40
+const MAX_PASSES = 6
+const WORDS_PER_CELL = 0.2
+
+export const defaultTargetWords = (size: number): number => Math.max(14, Math.round(size * size * WORDS_PER_CELL))
+
+const puzzleScore = (puzzle: Puzzle, size: number): number =>
+  puzzle.entries.length * 10 + (puzzle.rows === size ? 25 : 0) + (puzzle.cols === size ? 25 : 0)
 
 const createBoard = (size: number): Board => ({
   size,
@@ -135,10 +140,9 @@ function buildPool(corpus: readonly CorpusEntry[], size: number): Candidate[] {
 function attemptPuzzle(seed: number, attempt: number, pool: readonly Candidate[], size: number, target: number): Puzzle | null {
   const rng = mulberry32((seed + attempt * 0x9e3779b1) >>> 0)
   const shuffled = shuffle(pool, rng)
-  const firstIndex = Math.max(
-    0,
-    shuffled.findIndex((candidate) => candidate.answer.length >= 6),
-  )
+  const longEnough = (min: number) => shuffled.findIndex((candidate) => candidate.answer.length >= min)
+  const wide = longEnough(size - 3)
+  const firstIndex = Math.max(0, wide >= 0 ? wide : longEnough(6))
   const first = shuffled[firstIndex]
   if (!first) return null
   const remaining = shuffled.filter((_, index) => index !== firstIndex)
@@ -155,6 +159,7 @@ function attemptPuzzle(seed: number, attempt: number, pool: readonly Candidate[]
 
   const used = new Set<string>([first.answer])
   for (let pass = 0; pass < MAX_PASSES && placements.length < target; pass++) {
+    const before = placements.length
     for (const candidate of remaining) {
       if (placements.length >= target) break
       if (used.has(candidate.answer)) continue
@@ -164,6 +169,7 @@ function attemptPuzzle(seed: number, attempt: number, pool: readonly Candidate[]
       placements.push(placement)
       used.add(candidate.answer)
     }
+    if (placements.length === before) break
   }
 
   let minRow = size
@@ -213,17 +219,21 @@ function attemptPuzzle(seed: number, attempt: number, pool: readonly Candidate[]
 
 export function generatePuzzle(seed: number, corpus: readonly CorpusEntry[], options: GeneratorOptions = {}): Puzzle {
   const size = options.size ?? 15
-  const targetWords = options.targetWords ?? 14
+  const targetWords = options.targetWords ?? defaultTargetWords(size)
   const normalizedSeed = seed >>> 0
   const pool = buildPool(corpus, size)
   if (pool.length < 2) throw new Error('Corpus insuficiente para gerar o jogo.')
-  const accepted = Math.min(targetWords, MIN_ACCEPTED_WORDS)
   let best: Puzzle | null = null
+  let bestScore = -1
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const puzzle = attemptPuzzle(normalizedSeed, attempt, pool, size, targetWords)
     if (!puzzle || validatePuzzle(puzzle).length > 0) continue
-    if (puzzle.entries.length >= accepted) return puzzle
-    if (!best || puzzle.entries.length > best.entries.length) best = puzzle
+    const score = puzzleScore(puzzle, size)
+    if (score > bestScore) {
+      best = puzzle
+      bestScore = score
+    }
+    if (puzzle.rows === size && puzzle.cols === size && puzzle.entries.length >= targetWords) break
   }
   if (!best) throw new Error('Nao foi possivel gerar um jogo valido.')
   return best

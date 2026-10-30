@@ -1,4 +1,4 @@
-export const MIN_LENGTH = 3
+export const MIN_LENGTH = 2
 export const MAX_LENGTH = 15
 
 export function normalizeAnswer(input: string): string {
