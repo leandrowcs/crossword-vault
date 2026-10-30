@@ -1,0 +1,380 @@
+:root {
+  --bg: #12111c;
+  --panel: #1b1a2b;
+  --panel-2: #232238;
+  --border: #34325a;
+  --text: #ece9f7;
+  --muted: #9a96b8;
+  --gold: #f5b83d;
+  --gold-dim: #8a6a22;
+  --teal: #2ec4b6;
+  --red: #ff6b6b;
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1d1b33 0%, var(--bg) 55%);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.app-center {
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.state-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 1.1rem;
+}
+
+.header {
+  display: grid;
+  gap: 0.5rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.3rem, 4vw, 1.9rem);
+  letter-spacing: 0.02em;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.accent {
+  color: var(--gold);
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.meta strong {
+  color: var(--teal);
+}
+
+.difficulty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.difficulty select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+
+.progress {
+  height: 6px;
+  background: var(--panel-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  transition: width 0.2s ease;
+}
+
+.banner {
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(245, 184, 61, 0.2), rgba(46, 196, 182, 0.2));
+  border: 1px solid var(--gold);
+}
+
+.active-clue {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.7rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--gold);
+  border-radius: 10px;
+  min-height: 3rem;
+}
+
+.active-clue-tag {
+  color: var(--gold);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: auto 1fr;
+  }
+}
+
+.board-wrap {
+  position: relative;
+  overflow: auto;
+  max-width: 100%;
+  padding: 4px;
+  justify-self: center;
+}
+
+.board {
+  --cell: min(2.75rem, calc((100vw - 3rem) / var(--cols)));
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: 2px;
+  width: max-content;
+  padding: 4px;
+  background: var(--border);
+  border-radius: 8px;
+}
+
+.board:focus-within {
+  box-shadow: 0 0 0 2px var(--gold-dim);
+}
+
+.cell {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+}
+
+.cell-block {
+  background: #0a0a12;
+}
+
+.cell-letter {
+  background: var(--panel-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.cell-letter.in-word {
+  background: #3b3766;
+}
+
+.cell-letter.selected {
+  background: var(--gold);
+  color: #1a1304;
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+.cell-letter.flagged {
+  background: #6b1f2a;
+  color: #ffd2d2;
+}
+
+.cell-letter.flagged.selected {
+  background: var(--red);
+  color: #1a0505;
+}
+
+.cell-letter.revealed .cell-value {
+  color: var(--teal);
+}
+
+.cell-letter.revealed.selected .cell-value {
+  color: #04403a;
+}
+
+.cell-value {
+  font-size: calc(var(--cell) * 0.55);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cell-number {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: calc(var(--cell) * 0.26);
+  line-height: 1;
+  color: var(--muted);
+}
+
+.cell-letter.selected .cell-number {
+  color: #3d2c06;
+}
+
+.sr-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  left: 0;
+  top: 0;
+  border: 0;
+  padding: 0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.clues {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 560px) {
+  .clues {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.clue-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
+.clue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+}
+
+@media (min-width: 900px) {
+  .clue-list {
+    max-height: 22rem;
+  }
+}
+
+.clue button {
+  width: 100%;
+  display: flex;
+  gap: 0.6rem;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.45rem 0.5rem;
+  cursor: pointer;
+}
+
+.clue button:hover {
+  background: var(--panel-2);
+}
+
+.clue.active button {
+  background: #3b3766;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.clue.done .clue-text {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--teal);
+}
+
+.clue-number {
+  min-width: 1.6rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.clue-length {
+  color: var(--muted);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.btn {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.btn:hover {
+  border-color: var(--teal);
+}
+
+.btn-primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a1304;
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  border-color: #fff;
+}
+
+.btn-danger:hover {
+  border-color: var(--red);
+}
+
+@media (max-width: 520px) {
+  .toolbar .btn {
+    flex: 1 1 45%;
+  }
+}
