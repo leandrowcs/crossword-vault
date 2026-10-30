@@ -105,10 +105,6 @@ export default function App() {
     if (isBoardSize(size)) handleNewGame(size)
   }
 
-  const handleRevealAll = () => {
-    if (window.confirm('Revelar todas as respostas?')) game.revealEverything()
-  }
-
   const percent = stats.total === 0 ? 0 : Math.round((stats.filled / stats.total) * 100)
 
   return (
@@ -163,7 +159,6 @@ export default function App() {
         onCheck={game.check}
         onRevealLetter={game.revealLetter}
         onRevealWord={game.revealWord}
-        onRevealAll={handleRevealAll}
         onNewGame={() => handleNewGame()}
       />
 

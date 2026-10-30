@@ -15,7 +15,6 @@ import {
   readSave,
   resolveDirection,
   restoreGame,
-  revealAll,
   revealCell,
   revealEntry,
   saveGame,
@@ -242,11 +241,6 @@ export function useCrosswordGame() {
     [update],
   )
 
-  const revealEverything = useCallback(
-    () => update((s) => ({ ...s, game: revealAll(s.game, s.puzzle) })),
-    [update],
-  )
-
   return {
     status,
     retry: restart,
@@ -261,6 +255,5 @@ export function useCrosswordGame() {
     check,
     revealLetter,
     revealWord,
-    revealEverything,
   }
 }

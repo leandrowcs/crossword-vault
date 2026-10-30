@@ -387,10 +387,6 @@ h2 {
   border-color: #fff;
 }
 
-.btn-danger:hover {
-  border-color: var(--red);
-}
-
 @media (max-width: 520px) {
   .toolbar .btn {
     flex: 1 1 45%;
