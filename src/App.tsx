@@ -159,6 +159,13 @@ export default function App() {
           {helped ? <span> Algumas letras foram reveladas com ajuda.</span> : null}
         </div>
       ) : null}
+      <Toolbar
+        onCheck={game.check}
+        onRevealLetter={game.revealLetter}
+        onRevealWord={game.revealWord}
+        onRevealAll={handleRevealAll}
+        onNewGame={() => handleNewGame()}
+      />
 
       <div className="active-clue" aria-live="polite">
         {activeEntry ? (
@@ -188,29 +195,15 @@ export default function App() {
         />
         <div className="clues">
           <CluePanel
-            title="Horizontais"
-            entries={across}
+            across={across}
+            down={down}
             activeId={activeEntry?.id ?? null}
-            game={state}
-            onSelect={game.selectEntry}
-          />
-          <CluePanel
-            title="Verticais"
-            entries={down}
-            activeId={activeEntry?.id ?? null}
+            activeDirection={session.selection.direction}
             game={state}
             onSelect={game.selectEntry}
           />
         </div>
       </div>
-
-      <Toolbar
-        onCheck={game.check}
-        onRevealLetter={game.revealLetter}
-        onRevealWord={game.revealWord}
-        onRevealAll={handleRevealAll}
-        onNewGame={() => handleNewGame()}
-      />
     </main>
   )
 }
